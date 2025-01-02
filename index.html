@@ -1,222 +1,274 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QR Code Generator</title>
-  <link rel="stylesheet" href="styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-</head>
-<body>
-  <h1>QR Code Generator</h1>
-  <div class="container">
-    <div>
-      <div class="form-group">
-        <label for="dataType">Data Type:</label>
-        <select id="dataType">
-          <option value="text">Text</option>
-          <option value="url">URL</option>
-          <option value="vcard">vCard</option>
-          <option value="email">Email</option>
-          <option value="sms">SMS</option>
-          <option value="wifi">WiFi</option>
-        </select>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>QR Code Generator</title>
+      <link rel="stylesheet" href="styles.css">
+      <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    </head>
+    <body>
+      <h1>QR Code Generator</h1>
+      <div class="container">
+        <div>
+          <div class="form-group">
+            <label for="dataType">Data Type:</label>
+            <select id="dataType">
+              <option value="text">Text</option>
+              <option value="url">URL</option>
+              <option value="vcard">vCard</option>
+              <option value="email">Email</option>
+              <option value="sms">SMS</option>
+              <option value="wifi">WiFi</option>
+            </select>
+          </div>
+          <div id="textFields">
+            <div class="form-group">
+              <label for="textContent">Text Content:</label>
+              <textarea id="textContent" rows="4" placeholder="Enter text" maxlength="10000"></textarea>
+            </div>
+          </div>
+          <div id="urlFields" style="display: none;">
+            <div class="form-group">
+              <label for="urlContent">URL:</label>
+              <input type="url" id="urlContent" placeholder="Enter URL" maxlength="10000">
+            </div>
+          </div>
+          <div id="vcardFields" style="display: none;">
+            <div class="form-group">
+              <label for="vcardFirstName">First Name:</label>
+              <input type="text" id="vcardFirstName" placeholder="Enter First Name" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="vcardLastName">Last Name:</label>
+              <input type="text" id="vcardLastName" placeholder="Enter Last Name" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="vcardOrg">Organization:</label>
+              <input type="text" id="vcardOrg" placeholder="Enter Organization" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="vcardTel">Phone:</label>
+              <input type="tel" id="vcardTel" placeholder="Enter Phone Number" maxlength="50">
+            </div>
+            <div class="form-group">
+              <label for="vcardEmail">Email:</label>
+              <input type="email" id="vcardEmail" placeholder="Enter Email" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="vcardStreet">Street:</label>
+              <input type="text" id="vcardStreet" placeholder="Enter Street Address" maxlength="200">
+            </div>
+             <div class="form-group">
+              <label for="vcardCity">City:</label>
+              <input type="text" id="vcardCity" placeholder="Enter City" maxlength="100">
+            </div>
+             <div class="form-group">
+              <label for="vcardState">State:</label>
+              <input type="text" id="vcardState" placeholder="Enter State" maxlength="100">
+            </div>
+             <div class="form-group">
+              <label for="vcardZip">Zip Code:</label>
+              <input type="text" id="vcardZip" placeholder="Enter Zip Code" maxlength="20">
+            </div>
+             <div class="form-group">
+              <label for="vcardCountry">Country:</label>
+              <input type="text" id="vcardCountry" placeholder="Enter Country" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="vcardWebsite">Website:</label>
+              <input type="url" id="vcardWebsite" placeholder="Enter Website URL" maxlength="200">
+            </div>
+          </div>
+          <div id="emailFields" style="display: none;">
+            <div class="form-group">
+              <label for="emailAddress">Email Address:</label>
+              <input type="email" id="emailAddress" placeholder="Enter Email Address" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="emailSubject">Subject:</label>
+              <input type="text" id="emailSubject" placeholder="Enter Subject" maxlength="200">
+            </div>
+            <div class="form-group">
+              <label for="emailBody">Body:</label>
+              <textarea id="emailBody" rows="4" placeholder="Enter Email Body" maxlength="10000"></textarea>
+            </div>
+          </div>
+          <div id="smsFields" style="display: none;">
+            <div class="form-group">
+              <label for="smsNumber">Phone Number:</label>
+              <input type="tel" id="smsNumber" placeholder="Enter Phone Number" maxlength="50">
+            </div>
+            <div class="form-group">
+              <label for="smsMessage">Message:</label>
+              <textarea id="smsMessage" rows="4" placeholder="Enter Message" maxlength="10000"></textarea>
+            </div>
+          </div>
+          <div id="wifiFields" style="display: none;">
+            <div class="form-group">
+              <label for="wifiSsid">SSID:</label>
+              <input type="text" id="wifiSsid" placeholder="Enter SSID" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="wifiPassword">Password:</label>
+              <input type="password" id="wifiPassword" placeholder="Enter Password" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="wifiType">Encryption Type:</label>
+              <select id="wifiType">
+                <option value="WPA">WPA/WPA2</option>
+                <option value="WEP">WEP</option>
+                <option value="nopass">No Password</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="size">Size (px):</label>
+            <input type="number" id="size" value="200" min="100" max="1000">
+          </div>
+          <div class="form-group">
+            <label>Background Color:</label>
+            <div class="color-picker-container">
+              <div id="bgColorPreview" class="color-preview" style="background-color: #ffffff;"></div>
+              <input type="color" id="bgColor" value="#ffffff">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="errorLevel">Error Correction Level:</label>
+             <select id="errorLevel">
+              <option value="L">Low (7%)</option>
+              <option value="M">Medium</option>
+              <option value="Q">Quartile</option>
+              <option value="H">High</option>
+            </select>
+          </div>
+           <div class="form-group">
+            <label>Dots Color:</label>
+            <div class="color-picker-container">
+              <div id="dotsColorPreview" class="color-preview" style="background-color: #000000;"></div>
+              <input type="color" id="dotsColor" value="#000000">
+            </div>
+          </div>
+           <div class="form-group">
+            <label>Corners Color:</label>
+            <div class="color-picker-container">
+              <div id="cornersColorPreview" class="color-preview" style="background-color: #000000;"></div>
+              <input type="color" id="cornersColor" value="#000000">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="dotsType">Dots Type:</label>
+            <select id="dotsType">
+              <option value="square">Square</option>
+              <option value="dot">Dot</option>
+              <option value="dot-small">Small Dot</option>
+              <option value="tile">Tile</option>
+              <option value="rounded">Rounded</option>
+              <option value="diamond">Diamond</option>
+              <option value="star">Star</option>
+              <option value="fluid">Fluid</option>
+              <option value="fluid-line">Fluid Line</option>
+              <option value="stripe">Stripe</option>
+              <option value="stripe-row">Stripe Row</option>
+              <option value="stripe-column">Stripe Column</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cornersType">Corners Type:</label>
+            <select id="cornersType">
+              <option value="square">Square</option>
+              <option value="rounded">Rounded</option>
+              <option value="circle">Circle</option>
+              <option value="rounded-circle">Rounded Circle</option>
+              <option value="circle-rounded">Circle Rounded</option>
+              <option value="circle-star">Circle Star</option>
+              <option value="circle-diamond">Circle Diamond</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="iconUrl">Icon URL:</label>
+            <input type="url" id="iconUrl" placeholder="Enter icon URL">
+          </div>
+          <div class="form-group">
+            <label for="iconUpload">Upload Icon:</label>
+            <input type="file" id="iconUpload" accept="image/*">
+          </div>
+        </div>
+        <img id="qrcode" alt="" style="width: 200px; height: 200px; background-color: #ffffff;" />
       </div>
-      <div id="textFields">
-        <div class="form-group">
-          <label for="textContent">Text Content:</label>
-          <textarea id="textContent" rows="4" placeholder="Enter text" maxlength="10000"></textarea>
-        </div>
-      </div>
-      <div id="urlFields" style="display: none;">
-        <div class="form-group">
-          <label for="urlContent">URL:</label>
-          <input type="url" id="urlContent" placeholder="Enter URL" maxlength="10000">
-        </div>
-      </div>
-      <div id="vcardFields" style="display: none;">
-        <div class="form-group">
-          <label for="vcardFirstName">First Name:</label>
-          <input type="text" id="vcardFirstName" placeholder="Enter First Name" maxlength="100">
-        </div>
-        <div class="form-group">
-          <label for="vcardLastName">Last Name:</label>
-          <input type="text" id="vcardLastName" placeholder="Enter Last Name" maxlength="100">
-        </div>
-        <div class="form-group">
-          <label for="vcardOrg">Organization:</label>
-          <input type="text" id="vcardOrg" placeholder="Enter Organization" maxlength="100">
-        </div>
-        <div class="form-group">
-          <label for="vcardTel">Phone:</label>
-          <input type="tel" id="vcardTel" placeholder="Enter Phone Number" maxlength="50">
-        </div>
-        <div class="form-group">
-          <label for="vcardEmail">Email:</label>
-          <input type="email" id="vcardEmail" placeholder="Enter Email" maxlength="100">
-        </div>
-        <div class="form-group">
-          <label for="vcardStreet">Street:</label>
-          <input type="text" id="vcardStreet" placeholder="Enter Street Address" maxlength="200">
-        </div>
-         <div class="form-group">
-          <label for="vcardCity">City:</label>
-          <input type="text" id="vcardCity" placeholder="Enter City" maxlength="100">
-        </div>
-         <div class="form-group">
-          <label for="vcardState">State:</label>
-          <input type="text" id="vcardState" placeholder="Enter State" maxlength="100">
-        </div>
-         <div class="form-group">
-          <label for="vcardZip">Zip Code:</label>
-          <input type="text" id="vcardZip" placeholder="Enter Zip Code" maxlength="20">
-        </div>
-         <div class="form-group">
-          <label for="vcardCountry">Country:</label>
-          <input type="text" id="vcardCountry" placeholder="Enter Country" maxlength="100">
-        </div>
-        <div class="form-group">
-          <label for="vcardWebsite">Website:</label>
-          <input type="url" id="vcardWebsite" placeholder="Enter Website URL" maxlength="200">
-        </div>
-      </div>
-      <div id="emailFields" style="display: none;">
-        <div class="form-group">
-          <label for="emailAddress">Email Address:</label>
-          <input type="email" id="emailAddress" placeholder="Enter Email Address" maxlength="100">
-        </div>
-        <div class="form-group">
-          <label for="emailSubject">Subject:</label>
-          <input type="text" id="emailSubject" placeholder="Enter Subject" maxlength="200">
-        </div>
-        <div class="form-group">
-          <label for="emailBody">Body:</label>
-          <textarea id="emailBody" rows="4" placeholder="Enter Email Body" maxlength="10000"></textarea>
-        </div>
-      </div>
-      <div id="smsFields" style="display: none;">
-        <div class="form-group">
-          <label for="smsNumber">Phone Number:</label>
-          <input type="tel" id="smsNumber" placeholder="Enter Phone Number" maxlength="50">
-        </div>
-        <div class="form-group">
-          <label for="smsMessage">Message:</label>
-          <textarea id="smsMessage" rows="4" placeholder="Enter Message" maxlength="10000"></textarea>
-        </div>
-      </div>
-      <div id="wifiFields" style="display: none;">
-        <div class="form-group">
-          <label for="wifiSsid">SSID:</label>
-          <input type="text" id="wifiSsid" placeholder="Enter SSID" maxlength="100">
-        </div>
-        <div class="form-group">
-          <label for="wifiPassword">Password:</label>
-          <input type="password" id="wifiPassword" placeholder="Enter Password" maxlength="100">
-        </div>
-        <div class="form-group">
-          <label for="wifiType">Encryption Type:</label>
-          <select id="wifiType">
-            <option value="WPA">WPA/WPA2</option>
-            <option value="WEP">WEP</option>
-            <option value="nopass">No Password</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="size">Size (px):</label>
-        <input type="number" id="size" value="200" min="100" max="1000">
-      </div>
-      <div class="form-group">
-        <label>Color:</label>
-        <div class="color-picker-container">
-          <div id="colorPreview" class="color-preview" style="background-color: #000000;"></div>
-          <input type="color" id="color" value="#000000">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Background Color:</label>
-        <div class="color-picker-container">
-          <div id="bgColorPreview" class="color-preview" style="background-color: #ffffff;"></div>
-          <input type="color" id="bgColor" value="#ffffff">
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="errorLevel">Error Correction Level:</label>
-        <select id="errorLevel">
-          <option value="L">Low (7%)</option>
-          <option value="M">Medium</option>
-          <option value="Q">Quartile</option>
-          <option value="H">High</option>
-        </select>
-      </div>
-      <button id="generateBtn">Generate QR Code</button>
-    </div>
-    <div id="qrcode"></div>
-  </div>
-  <button id="downloadBtn">Download PNG</button>
-
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs2/qrcode.min.js"></script>
-  <script src="script.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const colorInput = document.getElementById('color');
-      const colorPreview = document.getElementById('colorPreview');
-      const bgColorInput = document.getElementById('bgColor');
-      const bgColorPreview = document.getElementById('bgColorPreview');
-      const dataTypeSelect = document.getElementById('dataType');
-      const textFields = document.getElementById('textFields');
-      const urlFields = document.getElementById('urlFields');
-      const vcardFields = document.getElementById('vcardFields');
-      const emailFields = document.getElementById('emailFields');
-      const smsFields = document.getElementById('smsFields');
-      const wifiFields = document.getElementById('wifiFields');
-
-      colorPreview.addEventListener('click', function() {
-        colorInput.click();
-      });
-
-      bgColorPreview.addEventListener('click', function() {
-        bgColorInput.click();
-      });
-
-      colorInput.addEventListener('input', function() {
-        colorPreview.style.backgroundColor = colorInput.value;
-      });
-
-      bgColorInput.addEventListener('input', function() {
-        bgColorPreview.style.backgroundColor = bgColorInput.value;
-      });
-
-      dataTypeSelect.addEventListener('change', function() {
-        textFields.style.display = 'none';
-        urlFields.style.display = 'none';
-        vcardFields.style.display = 'none';
-        emailFields.style.display = 'none';
-        smsFields.style.display = 'none';
-        wifiFields.style.display = 'none';
-
-        switch (dataTypeSelect.value) {
-          case 'text':
-            textFields.style.display = 'block';
-            break;
-          case 'url':
-            urlFields.style.display = 'block';
-            break;
-          case 'vcard':
-            vcardFields.style.display = 'block';
-            break;
-          case 'email':
-            emailFields.style.display = 'block';
-            break;
-          case 'sms':
-            smsFields.style.display = 'block';
-            break;
-          case 'wifi':
-            wifiFields.style.display = 'block';
-            break;
-        }
-      });
-    });
-  </script>
-</body>
-</html>
+      <button id="downloadBtn">Download PNG</button>
+    
+      <script src="https://cdn.jsdelivr.net/npm/qrcode-with-logos@1.1.1/lib/qrcode-with-logos.min.js"></script>
+      <script src="script.js"></script>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const bgColorInput = document.getElementById('bgColor');
+          const bgColorPreview = document.getElementById('bgColorPreview');
+          const dataTypeSelect = document.getElementById('dataType');
+          const textFields = document.getElementById('textFields');
+          const urlFields = document.getElementById('urlFields');
+          const vcardFields = document.getElementById('vcardFields');
+          const emailFields = document.getElementById('emailFields');
+          const smsFields = document.getElementById('smsFields');
+          const wifiFields = document.getElementById('wifiFields');
+          const dotsColorInput = document.getElementById('dotsColor');
+          const dotsColorPreview = document.getElementById('dotsColorPreview');
+          const cornersColorInput = document.getElementById('cornersColor');
+          const cornersColorPreview = document.getElementById('cornersColorPreview');
+    
+          bgColorPreview.addEventListener('click', function() {
+            bgColorInput.click();
+          });
+    
+          bgColorInput.addEventListener('input', function() {
+            bgColorPreview.style.backgroundColor = bgColorInput.value;
+          });
+          dotsColorPreview.addEventListener('click', function() {
+            dotsColorInput.click();
+          });
+    
+          cornersColorPreview.addEventListener('click', function() {
+            cornersColorInput.click();
+          });
+    
+          dotsColorInput.addEventListener('input', function() {
+            dotsColorPreview.style.backgroundColor = dotsColorInput.value;
+          });
+    
+          cornersColorInput.addEventListener('input', function() {
+            cornersColorPreview.style.backgroundColor = cornersColorInput.value;
+          });
+    
+          dataTypeSelect.addEventListener('change', function() {
+            textFields.style.display = 'none';
+            urlFields.style.display = 'none';
+            vcardFields.style.display = 'none';
+            emailFields.style.display = 'none';
+            smsFields.style.display = 'none';
+            wifiFields.style.display = 'none';
+    
+            switch (dataTypeSelect.value) {
+              case 'text':
+                textFields.style.display = 'block';
+                break;
+              case 'url':
+                urlFields.style.display = 'block';
+                break;
+              case 'vcard':
+                vcardFields.style.display = 'block';
+                break;
+              case 'email':
+                emailFields.style.display = 'block';
+                break;
+              case 'sms':
+                smsFields.style.display = 'block';
+                break;
+              case 'wifi':
+                wifiFields.style.display = 'block';
+                break;
+            }
+          });
+        });
+      </script>
+    </body>
+    </html>
