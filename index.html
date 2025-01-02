@@ -10,7 +10,84 @@
     <body>
       <h1>QR Code Generator</h1>
       <div class="container">
-        <div>
+        <div class="qr-code-container">
+          <img id="qrcode" alt="" style="width: 200px; height: 200px; background-color: #ffffff;" />
+        </div>
+        <div class="options-container">
+          <div class="options-group">
+            <div class="form-group">
+              <label for="size">Size (px):</label>
+              <input type="number" id="size" value="200" min="100" max="1000">
+            </div>
+          </div>
+          <div class="options-group">
+            <div class="form-group">
+              <label>Colors:</label>
+              <div class="color-picker-container">
+                <div id="bgColorPreview" class="color-preview" style="background-color: #ffffff;"></div>
+                <input type="color" id="bgColor" value="#ffffff">
+                <div id="dotsColorPreview" class="color-preview" style="background-color: #000000;"></div>
+                <input type="color" id="dotsColor" value="#000000">
+                 <div id="cornersColorPreview" class="color-preview" style="background-color: #000000;"></div>
+                <input type="color" id="cornersColor" value="#000000">
+              </div>
+            </div>
+          </div>
+          <div class="options-group">
+            <div class="form-group">
+              <label for="errorLevel">Error Correction Level:</label>
+               <select id="errorLevel">
+                <option value="L">Low (7%)</option>
+                <option value="M">Medium</option>
+                <option value="Q">Quartile</option>
+                <option value="H">High</option>
+              </select>
+            </div>
+          </div>
+          <div class="options-group">
+            <div class="form-group">
+              <label>Dots Type:</label>
+              <select id="dotsType">
+                <option value="square">Square</option>
+                <option value="dot">Dot</option>
+                <option value="dot-small">Small Dot</option>
+                <option value="tile">Tile</option>
+                <option value="rounded">Rounded</option>
+                <option value="diamond">Diamond</option>
+                <option value="star">Star</option>
+                <option value="fluid">Fluid</option>
+                <option value="fluid-line">Fluid Line</option>
+                <option value="stripe">Stripe</option>
+                <option value="stripe-row">Stripe Row</option>
+                <option value="stripe-column">Stripe Column</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Corners Type:</label>
+              <select id="cornersType">
+                <option value="square">Square</option>
+                <option value="rounded">Rounded</option>
+                <option value="circle">Circle</option>
+                <option value="rounded-circle">Rounded Circle</option>
+                <option value="circle-rounded">Circle Rounded</option>
+                <option value="circle-star">Circle Star</option>
+                <option value="circle-diamond">Circle Diamond</option>
+              </select>
+            </div>
+          </div>
+          <div class="options-group">
+            <div class="form-group">
+              <label>Logo:</label>
+              <input type="url" id="iconUrl" placeholder="Enter Logo URL">
+            </div>
+            <div class="form-group">
+              <label for="iconUpload">Change logo:</label>
+              <input type="file" id="iconUpload" accept="image/*">
+            </div>
+          </div>
+          <button id="downloadBtn">Download PNG</button>
+        </div>
+        <div class="data-input-container">
           <div class="form-group">
             <label for="dataType">Data Type:</label>
             <select id="dataType">
@@ -122,82 +199,8 @@
               </select>
             </div>
           </div>
-          <div class="form-group">
-            <label for="size">Size (px):</label>
-            <input type="number" id="size" value="200" min="100" max="1000">
-          </div>
-          <div class="form-group">
-            <label>Background Color:</label>
-            <div class="color-picker-container">
-              <div id="bgColorPreview" class="color-preview" style="background-color: #ffffff;"></div>
-              <input type="color" id="bgColor" value="#ffffff">
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="errorLevel">Error Correction Level:</label>
-             <select id="errorLevel">
-              <option value="L">Low (7%)</option>
-              <option value="M">Medium</option>
-              <option value="Q">Quartile</option>
-              <option value="H">High</option>
-            </select>
-          </div>
-           <div class="form-group">
-            <label>Dots Color:</label>
-            <div class="color-picker-container">
-              <div id="dotsColorPreview" class="color-preview" style="background-color: #000000;"></div>
-              <input type="color" id="dotsColor" value="#000000">
-            </div>
-          </div>
-           <div class="form-group">
-            <label>Corners Color:</label>
-            <div class="color-picker-container">
-              <div id="cornersColorPreview" class="color-preview" style="background-color: #000000;"></div>
-              <input type="color" id="cornersColor" value="#000000">
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="dotsType">Dots Type:</label>
-            <select id="dotsType">
-              <option value="square">Square</option>
-              <option value="dot">Dot</option>
-              <option value="dot-small">Small Dot</option>
-              <option value="tile">Tile</option>
-              <option value="rounded">Rounded</option>
-              <option value="diamond">Diamond</option>
-              <option value="star">Star</option>
-              <option value="fluid">Fluid</option>
-              <option value="fluid-line">Fluid Line</option>
-              <option value="stripe">Stripe</option>
-              <option value="stripe-row">Stripe Row</option>
-              <option value="stripe-column">Stripe Column</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="cornersType">Corners Type:</label>
-            <select id="cornersType">
-              <option value="square">Square</option>
-              <option value="rounded">Rounded</option>
-              <option value="circle">Circle</option>
-              <option value="rounded-circle">Rounded Circle</option>
-              <option value="circle-rounded">Circle Rounded</option>
-              <option value="circle-star">Circle Star</option>
-              <option value="circle-diamond">Circle Diamond</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="iconUrl">Icon URL:</label>
-            <input type="url" id="iconUrl" placeholder="Enter icon URL">
-          </div>
-          <div class="form-group">
-            <label for="iconUpload">Upload Icon:</label>
-            <input type="file" id="iconUpload" accept="image/*">
-          </div>
         </div>
-        <img id="qrcode" alt="" style="width: 200px; height: 200px; background-color: #ffffff;" />
       </div>
-      <button id="downloadBtn">Download PNG</button>
-    
       <script src="https://cdn.jsdelivr.net/npm/qrcode-with-logos@1.1.1/lib/qrcode-with-logos.min.js"></script>
       <script src="script.js"></script>
       <script>
