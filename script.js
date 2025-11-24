@@ -32,6 +32,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const cornersColorInput = document.getElementById('cornersColor');
       const dotsTypeSelect = document.getElementById('dotsType');
       const cornersTypeSelect = document.getElementById('cornersType');
+      const copyBtn = document.getElementById('copyBtn');
+      const shareBtn = document.getElementById('shareBtn');
+      const calendarTitle = document.getElementById('calendarTitle');
+      const calendarLocation = document.getElementById('calendarLocation');
+      const calendarStart = document.getElementById('calendarStart');
+      const calendarEnd = document.getElementById('calendarEnd');
+      const calendarDescription = document.getElementById('calendarDescription');
+      const geoLatitude = document.getElementById('geoLatitude');
+      const geoLongitude = document.getElementById('geoLongitude');
+      const getLocationBtn = document.getElementById('getLocationBtn');
       let uploadedIconUrl = null;
     
       function utf8Encode(str) {
@@ -66,6 +76,235 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return replacedStr;
       }
+
+      function formatDateToICS(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+      }
+
+      function formatCalendarEvent() {
+        const title = calendarTitle.value || '';
+        const location = calendarLocation.value || '';
+        const start = calendarStart.value;
+        const end = calendarEnd.value;
+        const description = calendarDescription.value || '';
+
+        if (!title || !start) return '';
+
+        const startFormatted = formatDateToICS(start);
+        const endFormatted = end ? formatDateToICS(end) : formatDateToICS(start);
+
+        return `BEGIN:VEVENT
+SUMMARY:${title}
+LOCATION:${location}
+DTSTART:${startFormatted}
+DTEND:${endFormatted}
+DESCRIPTION:${description}
+END:VEVENT`;
+      }
+
+      function generateHighResQRBlob(targetSize = 1024) {
+        return new Promise((resolve, reject) => {
+          let qrCodeData = '';
+          const dataType = dataTypeSelect.value;
+
+          switch (dataType) {
+            case 'text': qrCodeData = textContent.value; break;
+            case 'url': qrCodeData = urlContent.value; break;
+            case 'vcard':
+              qrCodeData = `BEGIN:VCARD\nVERSION:3.0\nN:${vcardLastName.value};${vcardFirstName.value}\nFN:${vcardFirstName.value} ${vcardLastName.value}\nORG:${vcardOrg.value}\nTEL:${vcardTel.value}\nEMAIL:${vcardEmail.value}\nADR:${vcardStreet.value};${vcardCity.value};${vcardState.value};${vcardZip.value};${vcardCountry.value}\nURL:${vcardWebsite.value}\nEND:VCARD`;
+              break;
+            case 'email':
+              qrCodeData = `mailto:${emailAddress.value}?subject=${encodeURIComponent(emailSubject.value)}&body=${encodeURIComponent(emailBody.value)}`;
+              break;
+            case 'sms': qrCodeData = `smsto:${smsNumber.value}:${smsMessage.value}`; break;
+            case 'wifi': qrCodeData = `WIFI:S:${wifiSsid.value};T:${wifiType.value};P:${wifiPassword.value};;`; break;
+            case 'calendar': qrCodeData = formatCalendarEvent(); break;
+            case 'geo':
+              const lat = geoLatitude.value;
+              const lng = geoLongitude.value;
+              if (lat && lng) qrCodeData = `geo:${lat},${lng}`;
+              break;
+          }
+
+          if (!qrCodeData.trim()) {
+            reject(new Error('No QR data'));
+            return;
+          }
+
+          const tempImg = document.createElement('img');
+          tempImg.style.display = 'none';
+          document.body.appendChild(tempImg);
+
+          const replacedData = replaceMultiByteChars(qrCodeData);
+          const iconUrl = iconUrlInput.value;
+          const logo = uploadedIconUrl || iconUrl;
+
+          const qrCodeOptions = {
+            content: replacedData,
+            width: targetSize,
+            image: tempImg,
+            download: false,
+            nodeQrCodeOptions: {
+              errorCorrectionLevel: errorLevelSelect.value,
+              color: {
+                dark: dotsColorInput.value,
+                light: bgColorInput.value,
+              },
+            },
+            dotsOptions: {
+              type: dotsTypeSelect.value,
+              color: dotsColorInput.value,
+            },
+            cornersOptions: {
+              type: cornersTypeSelect.value,
+              color: cornersColorInput.value,
+            },
+          };
+
+          if (logo) {
+            qrCodeOptions.logo = {
+              src: logo,
+              borderWidth: targetSize * 0.12,
+              borderRadius: targetSize * 0.08,
+              bgColor: bgColorInput.value,
+            };
+          }
+
+          try {
+            new QrCodeWithLogo(qrCodeOptions);
+
+            setTimeout(() => {
+              if (tempImg.src) {
+                fetch(tempImg.src)
+                  .then(res => res.blob())
+                  .then(blob => {
+                    document.body.removeChild(tempImg);
+                    resolve(blob);
+                  })
+                  .catch(err => {
+                    document.body.removeChild(tempImg);
+                    reject(err);
+                  });
+              } else {
+                document.body.removeChild(tempImg);
+                reject(new Error('Failed to generate high-res QR'));
+              }
+            }, 300);
+          } catch (error) {
+            document.body.removeChild(tempImg);
+            reject(error);
+          }
+        });
+      }
+
+      async function copyQRCode() {
+        const qrCodeImage = document.getElementById('qrcode');
+        if (!qrCodeImage.src) {
+          alert('Please generate a QR code first');
+          return;
+        }
+
+        copyBtn.disabled = true;
+
+        try {
+          const blob = await generateHighResQRBlob(1024);
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          copyBtn.disabled = false;
+        } catch (err) {
+          copyBtn.disabled = false;
+          alert('Copy failed. Your browser may not support clipboard image copy.');
+        }
+      }
+
+      async function shareQRCode() {
+        const qrCodeImage = document.getElementById('qrcode');
+        if (!qrCodeImage.src) {
+          alert('Please generate a QR code first');
+          return;
+        }
+
+        if (!navigator.share) {
+          alert('Share not supported in this browser. Try on mobile or use Copy instead.');
+          return;
+        }
+
+        shareBtn.disabled = true;
+
+        try {
+          const blob = await generateHighResQRBlob(1024);
+          const file = new File([blob], 'qrcode.png', { type: 'image/png' });
+
+          shareBtn.disabled = false;
+
+          await navigator.share({
+            title: 'QR Code',
+            text: 'Check out this QR code!',
+            files: [file]
+          });
+        } catch (err) {
+          shareBtn.disabled = false;
+          if (err.name !== 'AbortError') {
+            try {
+              await navigator.share({
+                title: 'QR Code',
+                text: 'QR Code generated with QR Code Generator'
+              });
+            } catch (textErr) {
+              if (textErr.name !== 'AbortError') {
+                alert('Share failed. Try using Copy instead.');
+              }
+            }
+          }
+        }
+      }
+
+      function getCurrentLocation() {
+        if (!navigator.geolocation) {
+          alert('Geolocation is not supported by your browser');
+          return;
+        }
+
+        getLocationBtn.textContent = 'Getting location...';
+        getLocationBtn.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            geoLatitude.value = position.coords.latitude.toFixed(6);
+            geoLongitude.value = position.coords.longitude.toFixed(6);
+            getLocationBtn.textContent = 'Use My Location';
+            getLocationBtn.disabled = false;
+            generateQRCode();
+          },
+          (error) => {
+            getLocationBtn.textContent = 'Use My Location';
+            getLocationBtn.disabled = false;
+            switch (error.code) {
+              case error.PERMISSION_DENIED:
+                alert('Location permission denied. Please enable location access.');
+                break;
+              case error.POSITION_UNAVAILABLE:
+                alert('Location information unavailable.');
+                break;
+              case error.TIMEOUT:
+                alert('Location request timed out.');
+                break;
+              default:
+                alert('An error occurred getting your location.');
+            }
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      }
     
       function generateQRCode() {
         let qrCodeData = '';
@@ -89,6 +328,16 @@ document.addEventListener('DOMContentLoaded', function() {
             break;
           case 'wifi':
             qrCodeData = `WIFI:S:${wifiSsid.value};T:${wifiType.value};P:${wifiPassword.value};;`;
+            break;
+          case 'calendar':
+            qrCodeData = formatCalendarEvent();
+            break;
+          case 'geo':
+            const lat = geoLatitude.value;
+            const lng = geoLongitude.value;
+            if (lat && lng) {
+              qrCodeData = `geo:${lat},${lng}`;
+            }
             break;
           default:
             alert('Please select a data type.');
@@ -216,5 +465,16 @@ document.addEventListener('DOMContentLoaded', function() {
       cornersTypeSelect.addEventListener('change', generateQRCode);
     
       downloadBtn.addEventListener('click', downloadQRCode);
+      copyBtn.addEventListener('click', copyQRCode);
+      shareBtn.addEventListener('click', shareQRCode);
+      getLocationBtn.addEventListener('click', getCurrentLocation);
+      calendarTitle.addEventListener('input', generateQRCode);
+      calendarLocation.addEventListener('input', generateQRCode);
+      calendarStart.addEventListener('input', generateQRCode);
+      calendarEnd.addEventListener('input', generateQRCode);
+      calendarDescription.addEventListener('input', generateQRCode);
+      geoLatitude.addEventListener('input', generateQRCode);
+      geoLongitude.addEventListener('input', generateQRCode);
+
       generateQRCode();
     });
