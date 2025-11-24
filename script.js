@@ -32,6 +32,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const cornersColorInput = document.getElementById('cornersColor');
       const dotsTypeSelect = document.getElementById('dotsType');
       const cornersTypeSelect = document.getElementById('cornersType');
+      const copyBtn = document.getElementById('copyBtn');
+      const shareBtn = document.getElementById('shareBtn');
+      const calendarTitle = document.getElementById('calendarTitle');
+      const calendarLocation = document.getElementById('calendarLocation');
+      const calendarStart = document.getElementById('calendarStart');
+      const calendarEnd = document.getElementById('calendarEnd');
+      const calendarDescription = document.getElementById('calendarDescription');
+      const geoLatitude = document.getElementById('geoLatitude');
+      const geoLongitude = document.getElementById('geoLongitude');
+      const getLocationBtn = document.getElementById('getLocationBtn');
       let uploadedIconUrl = null;
     
       function utf8Encode(str) {
@@ -66,6 +76,157 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return replacedStr;
       }
+
+      function formatDateToICS(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+      }
+
+      function formatCalendarEvent() {
+        const title = calendarTitle.value || '';
+        const location = calendarLocation.value || '';
+        const start = calendarStart.value;
+        const end = calendarEnd.value;
+        const description = calendarDescription.value || '';
+
+        if (!title || !start) return '';
+
+        const startFormatted = formatDateToICS(start);
+        const endFormatted = end ? formatDateToICS(end) : formatDateToICS(start);
+
+        return `BEGIN:VEVENT
+SUMMARY:${title}
+LOCATION:${location}
+DTSTART:${startFormatted}
+DTEND:${endFormatted}
+DESCRIPTION:${description}
+END:VEVENT`;
+      }
+
+      async function copyQRCode() {
+        const qrCodeImage = document.getElementById('qrcode');
+        if (!qrCodeImage.src) {
+          alert('Please generate a QR code first');
+          return;
+        }
+
+        try {
+          const response = await fetch(qrCodeImage.src);
+          const blob = await response.blob();
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+
+          const originalText = copyBtn.textContent;
+          copyBtn.textContent = 'Copied!';
+          copyBtn.style.backgroundColor = '#28a745';
+          setTimeout(() => {
+            copyBtn.textContent = originalText;
+            copyBtn.style.backgroundColor = '';
+          }, 2000);
+        } catch (err) {
+          try {
+            const canvas = document.createElement('canvas');
+            const img = qrCodeImage;
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob(async (blob) => {
+              await navigator.clipboard.write([
+                new ClipboardItem({ 'image/png': blob })
+              ]);
+              copyBtn.textContent = 'Copied!';
+              setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+            });
+          } catch (fallbackErr) {
+            alert('Copy failed. Your browser may not support clipboard image copy.');
+          }
+        }
+      }
+
+      async function shareQRCode() {
+        const qrCodeImage = document.getElementById('qrcode');
+        if (!qrCodeImage.src) {
+          alert('Please generate a QR code first');
+          return;
+        }
+
+        if (!navigator.share) {
+          alert('Share not supported in this browser. Try on mobile or use Copy instead.');
+          return;
+        }
+
+        try {
+          const response = await fetch(qrCodeImage.src);
+          const blob = await response.blob();
+          const file = new File([blob], 'qrcode.png', { type: 'image/png' });
+
+          await navigator.share({
+            title: 'QR Code',
+            text: 'Check out this QR code!',
+            files: [file]
+          });
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            try {
+              await navigator.share({
+                title: 'QR Code',
+                text: 'QR Code generated with QR Code Generator'
+              });
+            } catch (textErr) {
+              if (textErr.name !== 'AbortError') {
+                alert('Share failed. Try using Copy instead.');
+              }
+            }
+          }
+        }
+      }
+
+      function getCurrentLocation() {
+        if (!navigator.geolocation) {
+          alert('Geolocation is not supported by your browser');
+          return;
+        }
+
+        getLocationBtn.textContent = 'Getting location...';
+        getLocationBtn.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            geoLatitude.value = position.coords.latitude.toFixed(6);
+            geoLongitude.value = position.coords.longitude.toFixed(6);
+            getLocationBtn.textContent = 'Use My Location';
+            getLocationBtn.disabled = false;
+            generateQRCode();
+          },
+          (error) => {
+            getLocationBtn.textContent = 'Use My Location';
+            getLocationBtn.disabled = false;
+            switch (error.code) {
+              case error.PERMISSION_DENIED:
+                alert('Location permission denied. Please enable location access.');
+                break;
+              case error.POSITION_UNAVAILABLE:
+                alert('Location information unavailable.');
+                break;
+              case error.TIMEOUT:
+                alert('Location request timed out.');
+                break;
+              default:
+                alert('An error occurred getting your location.');
+            }
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      }
     
       function generateQRCode() {
         let qrCodeData = '';
@@ -89,6 +250,16 @@ document.addEventListener('DOMContentLoaded', function() {
             break;
           case 'wifi':
             qrCodeData = `WIFI:S:${wifiSsid.value};T:${wifiType.value};P:${wifiPassword.value};;`;
+            break;
+          case 'calendar':
+            qrCodeData = formatCalendarEvent();
+            break;
+          case 'geo':
+            const lat = geoLatitude.value;
+            const lng = geoLongitude.value;
+            if (lat && lng) {
+              qrCodeData = `geo:${lat},${lng}`;
+            }
             break;
           default:
             alert('Please select a data type.');
@@ -216,5 +387,16 @@ document.addEventListener('DOMContentLoaded', function() {
       cornersTypeSelect.addEventListener('change', generateQRCode);
     
       downloadBtn.addEventListener('click', downloadQRCode);
+      copyBtn.addEventListener('click', copyQRCode);
+      shareBtn.addEventListener('click', shareQRCode);
+      getLocationBtn.addEventListener('click', getCurrentLocation);
+      calendarTitle.addEventListener('input', generateQRCode);
+      calendarLocation.addEventListener('input', generateQRCode);
+      calendarStart.addEventListener('input', generateQRCode);
+      calendarEnd.addEventListener('input', generateQRCode);
+      calendarDescription.addEventListener('input', generateQRCode);
+      geoLatitude.addEventListener('input', generateQRCode);
+      geoLongitude.addEventListener('input', generateQRCode);
+
       generateQRCode();
     });

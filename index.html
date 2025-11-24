@@ -85,7 +85,11 @@
               <input type="file" id="iconUpload" accept="image/*">
             </div>
           </div>
-          <button id="downloadBtn">Download PNG</button>
+          <div class="button-group">
+            <button id="downloadBtn">Download PNG</button>
+            <button id="copyBtn" title="Copy QR code to clipboard">Copy</button>
+            <button id="shareBtn" title="Share QR code">Share</button>
+          </div>
         </div>
         <div class="data-input-container">
           <div class="form-group">
@@ -97,6 +101,8 @@
               <option value="email">Email</option>
               <option value="sms">SMS</option>
               <option value="wifi">WiFi</option>
+              <option value="calendar">Calendar Event</option>
+              <option value="geo">Geo Location</option>
             </select>
           </div>
           <div id="textFields">
@@ -199,6 +205,41 @@
               </select>
             </div>
           </div>
+          <div id="calendarFields" style="display: none;">
+            <div class="form-group">
+              <label for="calendarTitle">Event Title:</label>
+              <input type="text" id="calendarTitle" placeholder="Enter event title" maxlength="200">
+            </div>
+            <div class="form-group">
+              <label for="calendarLocation">Location:</label>
+              <input type="text" id="calendarLocation" placeholder="Enter location" maxlength="200">
+            </div>
+            <div class="form-group">
+              <label for="calendarStart">Start Date & Time:</label>
+              <input type="datetime-local" id="calendarStart">
+            </div>
+            <div class="form-group">
+              <label for="calendarEnd">End Date & Time:</label>
+              <input type="datetime-local" id="calendarEnd">
+            </div>
+            <div class="form-group">
+              <label for="calendarDescription">Description:</label>
+              <textarea id="calendarDescription" rows="3" placeholder="Enter event description" maxlength="500"></textarea>
+            </div>
+          </div>
+          <div id="geoFields" style="display: none;">
+            <div class="form-group">
+              <label for="geoLatitude">Latitude:</label>
+              <input type="number" id="geoLatitude" placeholder="e.g. 44.4268" step="any" min="-90" max="90">
+            </div>
+            <div class="form-group">
+              <label for="geoLongitude">Longitude:</label>
+              <input type="number" id="geoLongitude" placeholder="e.g. 26.1025" step="any" min="-180" max="180">
+            </div>
+            <div class="form-group">
+              <button type="button" id="getLocationBtn" class="secondary-btn">Use My Location</button>
+            </div>
+          </div>
         </div>
       </div>
       <script src="https://cdn.jsdelivr.net/npm/qrcode-with-logos@1.1.1/lib/qrcode-with-logos.min.js"></script>
@@ -214,6 +255,8 @@
           const emailFields = document.getElementById('emailFields');
           const smsFields = document.getElementById('smsFields');
           const wifiFields = document.getElementById('wifiFields');
+          const calendarFields = document.getElementById('calendarFields');
+          const geoFields = document.getElementById('geoFields');
           const dotsColorInput = document.getElementById('dotsColor');
           const dotsColorPreview = document.getElementById('dotsColorPreview');
           const cornersColorInput = document.getElementById('cornersColor');
@@ -249,7 +292,9 @@
             emailFields.style.display = 'none';
             smsFields.style.display = 'none';
             wifiFields.style.display = 'none';
-    
+            calendarFields.style.display = 'none';
+            geoFields.style.display = 'none';
+
             switch (dataTypeSelect.value) {
               case 'text':
                 textFields.style.display = 'block';
@@ -268,6 +313,12 @@
                 break;
               case 'wifi':
                 wifiFields.style.display = 'block';
+                break;
+              case 'calendar':
+                calendarFields.style.display = 'block';
+                break;
+              case 'geo':
+                geoFields.style.display = 'block';
                 break;
             }
           });

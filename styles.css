@@ -128,6 +128,56 @@ body {
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .button-group button {
+      flex: 1;
+      margin-top: 0;
+    }
+
+    #copyBtn {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    #copyBtn:hover {
+      background-color: #545b62;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    #shareBtn {
+      background-color: #17a2b8;
+      color: white;
+    }
+
+    #shareBtn:hover {
+      background-color: #138496;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .secondary-btn {
+      background-color: #6c757d;
+      color: white;
+      width: 100%;
+    }
+
+    .secondary-btn:hover {
+      background-color: #545b62;
+      transform: translateY(-2px);
+    }
+
+    .secondary-btn:disabled {
+      background-color: #adb5bd;
+      cursor: not-allowed;
+      transform: none;
+    }
     
     /* Color Picker Styles */
     .color-picker-container {
@@ -209,21 +259,30 @@ body {
       body {
         padding: 5px;
       }
-    
+
       .container {
         gap: 10px;
       }
-    
+
       #qrcode {
         min-height: 100px;
         padding: 8px;
       }
-    
+
       .form-group {
         margin-bottom: 8px;
       }
-    
+
       button {
         margin-top: 8px;
+      }
+
+      .button-group {
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .button-group button {
+        margin-top: 0;
       }
     }
