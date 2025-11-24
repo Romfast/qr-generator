@@ -116,50 +116,102 @@ body {
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
     
-    #downloadBtn {
-      margin-top: 10px;
-      background-color: #007bff;
-      color: white;
-      width: 100%;
-    }
-    
-    #downloadBtn:hover {
-      background-color: #0056b3;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
+    /* Icon Buttons - Minimal Dark Style */
     .button-group {
       display: flex;
       gap: 8px;
-      margin-top: 10px;
+      margin-top: 12px;
+      justify-content: center;
     }
 
-    .button-group button {
-      flex: 1;
-      margin-top: 0;
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #24292e;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
     }
 
-    #copyBtn {
-      background-color: #6c757d;
-      color: white;
+    .icon-btn:hover {
+      background-color: #3a4149;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .icon-btn:active {
+      transform: translateY(0);
+      background-color: #1a1e22;
+    }
+
+    .icon-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      transition: stroke 0.2s ease;
+    }
+
+    /* Tooltip on hover */
+    .icon-btn::after {
+      content: attr(title);
+      position: absolute;
+      bottom: -32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background-color: #24292e;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .icon-btn:hover::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Individual button colors on hover */
+    #downloadBtn:hover {
+      background-color: #238636;
     }
 
     #copyBtn:hover {
-      background-color: #545b62;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    #shareBtn {
-      background-color: #17a2b8;
-      color: white;
+      background-color: #1f6feb;
     }
 
     #shareBtn:hover {
-      background-color: #138496;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      background-color: #8957e5;
+    }
+
+    /* Success state */
+    .icon-btn.success {
+      background-color: #238636 !important;
+    }
+
+    .icon-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .icon-btn:disabled:hover {
+      transform: none;
+      box-shadow: none;
     }
 
     .secondary-btn {
@@ -273,16 +325,17 @@ body {
         margin-bottom: 8px;
       }
 
-      button {
-        margin-top: 8px;
+      .icon-btn {
+        width: 40px;
+        height: 40px;
       }
 
-      .button-group {
-        flex-direction: column;
-        gap: 5px;
+      .icon-btn svg {
+        width: 18px;
+        height: 18px;
       }
 
-      .button-group button {
-        margin-top: 0;
+      .icon-btn::after {
+        display: none;
       }
     }
