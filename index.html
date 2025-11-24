@@ -108,6 +108,12 @@
                 <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
               </svg>
             </button>
+            <button id="historyBtn" class="icon-btn" title="History">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </button>
           </div>
         </div>
         <div class="data-input-container">
@@ -261,6 +267,22 @@
           </div>
         </div>
       </div>
+    <!-- History Modal -->
+      <div id="historyModal" class="history-modal">
+        <div class="history-modal-content">
+          <div class="history-modal-header">
+            <h3>QR Code History</h3>
+            <button id="closeHistoryBtn" class="history-close-btn">&times;</button>
+          </div>
+          <div id="historyList" class="history-list">
+            <!-- History items will be inserted here -->
+          </div>
+          <div class="history-modal-footer">
+            <button id="clearHistoryBtn" class="history-clear-btn">Clear All</button>
+          </div>
+        </div>
+      </div>
+
       <script src="https://cdn.jsdelivr.net/npm/qrcode-with-logos@1.1.1/lib/qrcode-with-logos.min.js"></script>
       <script src="script.js"></script>
       <script>

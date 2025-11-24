@@ -43,7 +43,441 @@ document.addEventListener('DOMContentLoaded', function() {
       const geoLongitude = document.getElementById('geoLongitude');
       const getLocationBtn = document.getElementById('getLocationBtn');
       let uploadedIconUrl = null;
-    
+
+      // History Management
+      const HISTORY_KEY = 'qrCodeHistory';
+      const MAX_HISTORY_ITEMS = 10;
+      let saveTimeout = null;
+      let lastSavedData = null;
+
+      const historyBtn = document.getElementById('historyBtn');
+      const historyModal = document.getElementById('historyModal');
+      const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+      const historyList = document.getElementById('historyList');
+      const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+      // Type icons and labels
+      const typeConfig = {
+        text: { icon: '📝', label: 'Text' },
+        url: { icon: '🔗', label: 'URL' },
+        vcard: { icon: '👤', label: 'vCard' },
+        email: { icon: '📧', label: 'Email' },
+        sms: { icon: '💬', label: 'SMS' },
+        wifi: { icon: '📶', label: 'WiFi' },
+        calendar: { icon: '📅', label: 'Calendar' },
+        geo: { icon: '📍', label: 'Location' }
+      };
+
+      function getHistory() {
+        try {
+          const history = localStorage.getItem(HISTORY_KEY);
+          return history ? JSON.parse(history) : [];
+        } catch (e) {
+          console.error('Error loading history:', e);
+          return [];
+        }
+      }
+
+      function saveHistory(history) {
+        try {
+          localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        } catch (e) {
+          console.error('Error saving history:', e);
+        }
+      }
+
+      function generateThumbnail(callback) {
+        const tempImg = document.createElement('img');
+        tempImg.style.display = 'none';
+        document.body.appendChild(tempImg);
+
+        const dataType = dataTypeSelect.value;
+        let qrCodeData = getCurrentQRData();
+
+        if (!qrCodeData.trim()) {
+          document.body.removeChild(tempImg);
+          callback(null);
+          return;
+        }
+
+        const replacedData = replaceMultiByteChars(qrCodeData);
+        const iconUrl = iconUrlInput.value;
+        const logo = uploadedIconUrl || iconUrl;
+
+        const qrCodeOptions = {
+          content: replacedData,
+          width: 100,
+          image: tempImg,
+          download: false,
+          nodeQrCodeOptions: {
+            errorCorrectionLevel: errorLevelSelect.value,
+            color: {
+              dark: dotsColorInput.value,
+              light: bgColorInput.value,
+            },
+          },
+          dotsOptions: {
+            type: dotsTypeSelect.value,
+            color: dotsColorInput.value,
+          },
+          cornersOptions: {
+            type: cornersTypeSelect.value,
+            color: cornersColorInput.value,
+          },
+        };
+
+        if (logo) {
+          qrCodeOptions.logo = {
+            src: logo,
+            borderWidth: 12,
+            borderRadius: 8,
+            bgColor: bgColorInput.value,
+          };
+        }
+
+        try {
+          new QrCodeWithLogo(qrCodeOptions);
+          setTimeout(() => {
+            const thumbnail = tempImg.src || null;
+            document.body.removeChild(tempImg);
+            callback(thumbnail);
+          }, 200);
+        } catch (error) {
+          document.body.removeChild(tempImg);
+          callback(null);
+        }
+      }
+
+      function getCurrentQRData() {
+        const dataType = dataTypeSelect.value;
+        switch (dataType) {
+          case 'text': return textContent.value;
+          case 'url': return urlContent.value;
+          case 'vcard':
+            return `BEGIN:VCARD\nVERSION:3.0\nN:${vcardLastName.value};${vcardFirstName.value}\nFN:${vcardFirstName.value} ${vcardLastName.value}\nORG:${vcardOrg.value}\nTEL:${vcardTel.value}\nEMAIL:${vcardEmail.value}\nADR:${vcardStreet.value};${vcardCity.value};${vcardState.value};${vcardZip.value};${vcardCountry.value}\nURL:${vcardWebsite.value}\nEND:VCARD`;
+          case 'email':
+            return `mailto:${emailAddress.value}?subject=${encodeURIComponent(emailSubject.value)}&body=${encodeURIComponent(emailBody.value)}`;
+          case 'sms': return `smsto:${smsNumber.value}:${smsMessage.value}`;
+          case 'wifi': return `WIFI:S:${wifiSsid.value};T:${wifiType.value};P:${wifiPassword.value};;`;
+          case 'calendar': return formatCalendarEvent();
+          case 'geo':
+            const lat = geoLatitude.value;
+            const lng = geoLongitude.value;
+            return (lat && lng) ? `geo:${lat},${lng}` : '';
+          default: return '';
+        }
+      }
+
+      function getPreviewText(type, data) {
+        switch (type) {
+          case 'text':
+            return data.textContent ? data.textContent.substring(0, 30) + (data.textContent.length > 30 ? '...' : '') : 'Empty text';
+          case 'url':
+            try {
+              const url = new URL(data.urlContent);
+              return url.hostname + (url.pathname !== '/' ? url.pathname.substring(0, 15) + '...' : '');
+            } catch {
+              return data.urlContent ? data.urlContent.substring(0, 30) + '...' : 'Empty URL';
+            }
+          case 'vcard':
+            const name = [data.vcardFirstName, data.vcardLastName].filter(Boolean).join(' ');
+            const org = data.vcardOrg;
+            return name ? (org ? `${name} - ${org}` : name) : (org || 'Empty contact');
+          case 'email':
+            return data.emailAddress || 'Empty email';
+          case 'sms':
+            return data.smsNumber || 'Empty SMS';
+          case 'wifi':
+            const ssid = data.wifiSsid || 'Unknown';
+            const security = data.wifiType === 'nopass' ? 'Open' : data.wifiType;
+            return `${ssid} (${security})`;
+          case 'calendar':
+            return data.calendarTitle || 'Untitled event';
+          case 'geo':
+            if (data.geoLatitude && data.geoLongitude) {
+              return `${parseFloat(data.geoLatitude).toFixed(4)}, ${parseFloat(data.geoLongitude).toFixed(4)}`;
+            }
+            return 'Empty location';
+          default:
+            return 'QR Code';
+        }
+      }
+
+      function formatRelativeTime(timestamp) {
+        const now = Date.now();
+        const diff = now - timestamp;
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(diff / 3600000);
+        const days = Math.floor(diff / 86400000);
+
+        if (minutes < 1) return 'acum';
+        if (minutes < 60) return `acum ${minutes} min`;
+        if (hours < 24) return `acum ${hours} ${hours === 1 ? 'oră' : 'ore'}`;
+        if (days === 1) return 'ieri';
+        if (days < 7) return `acum ${days} zile`;
+
+        const date = new Date(timestamp);
+        const monthNames = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+        return `${date.getDate()} ${monthNames[date.getMonth()]}`;
+      }
+
+      function getCurrentFormData() {
+        return {
+          // Data type
+          dataType: dataTypeSelect.value,
+          // Text
+          textContent: textContent.value,
+          // URL
+          urlContent: urlContent.value,
+          // vCard
+          vcardFirstName: vcardFirstName.value,
+          vcardLastName: vcardLastName.value,
+          vcardOrg: vcardOrg.value,
+          vcardTel: vcardTel.value,
+          vcardEmail: vcardEmail.value,
+          vcardStreet: vcardStreet.value,
+          vcardCity: vcardCity.value,
+          vcardState: vcardState.value,
+          vcardZip: vcardZip.value,
+          vcardCountry: vcardCountry.value,
+          vcardWebsite: vcardWebsite.value,
+          // Email
+          emailAddress: emailAddress.value,
+          emailSubject: emailSubject.value,
+          emailBody: emailBody.value,
+          // SMS
+          smsNumber: smsNumber.value,
+          smsMessage: smsMessage.value,
+          // WiFi
+          wifiSsid: wifiSsid.value,
+          wifiPassword: wifiPassword.value,
+          wifiType: wifiType.value,
+          // Calendar
+          calendarTitle: calendarTitle.value,
+          calendarLocation: calendarLocation.value,
+          calendarStart: calendarStart.value,
+          calendarEnd: calendarEnd.value,
+          calendarDescription: calendarDescription.value,
+          // Geo
+          geoLatitude: geoLatitude.value,
+          geoLongitude: geoLongitude.value,
+          // Styling
+          size: sizeInput.value,
+          bgColor: bgColorInput.value,
+          dotsColor: dotsColorInput.value,
+          cornersColor: cornersColorInput.value,
+          errorLevel: errorLevelSelect.value,
+          dotsType: dotsTypeSelect.value,
+          cornersType: cornersTypeSelect.value,
+          iconUrl: iconUrlInput.value
+        };
+      }
+
+      function restoreFromHistory(historyItem) {
+        const data = historyItem.data;
+
+        // Set data type first
+        dataTypeSelect.value = data.dataType;
+        // Trigger the change to show correct fields
+        dataTypeSelect.dispatchEvent(new Event('change'));
+
+        // Restore all form fields
+        textContent.value = data.textContent || '';
+        urlContent.value = data.urlContent || '';
+        vcardFirstName.value = data.vcardFirstName || '';
+        vcardLastName.value = data.vcardLastName || '';
+        vcardOrg.value = data.vcardOrg || '';
+        vcardTel.value = data.vcardTel || '';
+        vcardEmail.value = data.vcardEmail || '';
+        vcardStreet.value = data.vcardStreet || '';
+        vcardCity.value = data.vcardCity || '';
+        vcardState.value = data.vcardState || '';
+        vcardZip.value = data.vcardZip || '';
+        vcardCountry.value = data.vcardCountry || '';
+        vcardWebsite.value = data.vcardWebsite || '';
+        emailAddress.value = data.emailAddress || '';
+        emailSubject.value = data.emailSubject || '';
+        emailBody.value = data.emailBody || '';
+        smsNumber.value = data.smsNumber || '';
+        smsMessage.value = data.smsMessage || '';
+        wifiSsid.value = data.wifiSsid || '';
+        wifiPassword.value = data.wifiPassword || '';
+        wifiType.value = data.wifiType || 'WPA';
+        calendarTitle.value = data.calendarTitle || '';
+        calendarLocation.value = data.calendarLocation || '';
+        calendarStart.value = data.calendarStart || '';
+        calendarEnd.value = data.calendarEnd || '';
+        calendarDescription.value = data.calendarDescription || '';
+        geoLatitude.value = data.geoLatitude || '';
+        geoLongitude.value = data.geoLongitude || '';
+
+        // Restore styling
+        sizeInput.value = data.size || '200';
+        bgColorInput.value = data.bgColor || '#ffffff';
+        dotsColorInput.value = data.dotsColor || '#000000';
+        cornersColorInput.value = data.cornersColor || '#000000';
+        errorLevelSelect.value = data.errorLevel || 'L';
+        dotsTypeSelect.value = data.dotsType || 'square';
+        cornersTypeSelect.value = data.cornersType || 'square';
+        iconUrlInput.value = data.iconUrl || '';
+
+        // Update color previews
+        document.getElementById('bgColorPreview').style.backgroundColor = data.bgColor || '#ffffff';
+        document.getElementById('dotsColorPreview').style.backgroundColor = data.dotsColor || '#000000';
+        document.getElementById('cornersColorPreview').style.backgroundColor = data.cornersColor || '#000000';
+
+        // Regenerate QR code
+        generateQRCode();
+
+        // Close modal
+        closeHistoryModal();
+      }
+
+      function saveToHistory() {
+        const qrData = getCurrentQRData();
+
+        // Don't save empty QR codes
+        if (!qrData.trim()) return;
+
+        // Create data signature to check for duplicates
+        const formData = getCurrentFormData();
+        const dataSignature = JSON.stringify({
+          type: formData.dataType,
+          data: qrData
+        });
+
+        // Don't save if same as last saved
+        if (dataSignature === lastSavedData) return;
+
+        generateThumbnail((thumbnail) => {
+          if (!thumbnail) return;
+
+          const history = getHistory();
+          const historyItem = {
+            id: Date.now(),
+            type: formData.dataType,
+            data: formData,
+            preview: getPreviewText(formData.dataType, formData),
+            thumbnail: thumbnail,
+            timestamp: Date.now()
+          };
+
+          // Add to beginning of array
+          history.unshift(historyItem);
+
+          // Keep only MAX_HISTORY_ITEMS
+          if (history.length > MAX_HISTORY_ITEMS) {
+            history.pop();
+          }
+
+          saveHistory(history);
+          lastSavedData = dataSignature;
+        });
+      }
+
+      function debouncedSave() {
+        if (saveTimeout) {
+          clearTimeout(saveTimeout);
+        }
+        saveTimeout = setTimeout(saveToHistory, 1500);
+      }
+
+      function deleteHistoryItem(id, event) {
+        event.stopPropagation();
+        const history = getHistory().filter(item => item.id !== id);
+        saveHistory(history);
+        renderHistory();
+      }
+
+      function clearAllHistory() {
+        if (confirm('Ștergi tot istoricul QR codurilor?')) {
+          localStorage.removeItem(HISTORY_KEY);
+          lastSavedData = null;
+          renderHistory();
+        }
+      }
+
+      function renderHistory() {
+        const history = getHistory();
+
+        if (history.length === 0) {
+          historyList.innerHTML = `
+            <div class="history-empty">
+              <div class="history-empty-icon">📭</div>
+              <div>Nu există QR coduri în istoric</div>
+            </div>
+          `;
+          clearHistoryBtn.disabled = true;
+          return;
+        }
+
+        clearHistoryBtn.disabled = false;
+        historyList.innerHTML = history.map(item => {
+          const config = typeConfig[item.type] || { icon: '📄', label: 'Unknown' };
+          return `
+            <div class="history-item" data-id="${item.id}">
+              <div class="history-item-icon">${config.icon}</div>
+              <div class="history-item-content">
+                <div class="history-item-type">${config.label}</div>
+                <div class="history-item-preview">${escapeHtml(item.preview)}</div>
+                <div class="history-item-time">${formatRelativeTime(item.timestamp)}</div>
+              </div>
+              <img class="history-item-thumbnail" src="${item.thumbnail}" alt="QR">
+              <button class="history-item-delete" data-id="${item.id}" title="Șterge">&times;</button>
+            </div>
+          `;
+        }).join('');
+
+        // Add click handlers
+        historyList.querySelectorAll('.history-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const id = parseInt(item.dataset.id);
+            const historyItem = history.find(h => h.id === id);
+            if (historyItem) {
+              restoreFromHistory(historyItem);
+            }
+          });
+        });
+
+        historyList.querySelectorAll('.history-item-delete').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            deleteHistoryItem(parseInt(btn.dataset.id), e);
+          });
+        });
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function openHistoryModal() {
+        renderHistory();
+        historyModal.classList.add('show');
+      }
+
+      function closeHistoryModal() {
+        historyModal.classList.remove('show');
+      }
+
+      // History event listeners
+      historyBtn.addEventListener('click', openHistoryModal);
+      closeHistoryBtn.addEventListener('click', closeHistoryModal);
+      clearHistoryBtn.addEventListener('click', clearAllHistory);
+
+      historyModal.addEventListener('click', (e) => {
+        if (e.target === historyModal) {
+          closeHistoryModal();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && historyModal.classList.contains('show')) {
+          closeHistoryModal();
+        }
+      });
+
       function utf8Encode(str) {
         try {
           return new TextEncoder().encode(str);
@@ -394,6 +828,8 @@ END:VEVENT`;
         try {
           new QrCodeWithLogo(qrCodeOptions);
           downloadBtn.style.display = 'block';
+          // Debounced save to history
+          debouncedSave();
         } catch (error) {
            if (error.message.includes('code length overflow')) {
             alert('Error generating QR code: Data is too large. Please reduce the amount of data or use a lower error correction level.');
