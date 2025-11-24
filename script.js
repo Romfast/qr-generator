@@ -426,12 +426,14 @@ document.addEventListener('DOMContentLoaded', function() {
         clearHistoryBtn.disabled = false;
         historyList.innerHTML = history.map(item => {
           const config = typeConfig[item.type] || { icon: '📄', label: 'Unknown' };
+          // Generate preview on-the-fly if not saved (for backwards compatibility)
+          const preview = item.preview || (item.data ? getPreviewText(item.type, item.data) : 'QR Code');
           return `
             <div class="history-item" data-id="${item.id}">
               <div class="history-item-icon">${config.icon}</div>
               <div class="history-item-content">
                 <div class="history-item-type">${config.label}</div>
-                <div class="history-item-preview">${escapeHtml(item.preview)}</div>
+                <div class="history-item-preview">${escapeHtml(preview)}</div>
                 <div class="history-item-time">${formatRelativeTime(item.timestamp)}</div>
               </div>
               <img class="history-item-thumbnail" src="${item.thumbnail}" alt="QR">
