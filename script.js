@@ -110,6 +110,101 @@ DESCRIPTION:${description}
 END:VEVENT`;
       }
 
+      function generateHighResQRBlob(targetSize = 1024) {
+        return new Promise((resolve, reject) => {
+          let qrCodeData = '';
+          const dataType = dataTypeSelect.value;
+
+          switch (dataType) {
+            case 'text': qrCodeData = textContent.value; break;
+            case 'url': qrCodeData = urlContent.value; break;
+            case 'vcard':
+              qrCodeData = `BEGIN:VCARD\nVERSION:3.0\nN:${vcardLastName.value};${vcardFirstName.value}\nFN:${vcardFirstName.value} ${vcardLastName.value}\nORG:${vcardOrg.value}\nTEL:${vcardTel.value}\nEMAIL:${vcardEmail.value}\nADR:${vcardStreet.value};${vcardCity.value};${vcardState.value};${vcardZip.value};${vcardCountry.value}\nURL:${vcardWebsite.value}\nEND:VCARD`;
+              break;
+            case 'email':
+              qrCodeData = `mailto:${emailAddress.value}?subject=${encodeURIComponent(emailSubject.value)}&body=${encodeURIComponent(emailBody.value)}`;
+              break;
+            case 'sms': qrCodeData = `smsto:${smsNumber.value}:${smsMessage.value}`; break;
+            case 'wifi': qrCodeData = `WIFI:S:${wifiSsid.value};T:${wifiType.value};P:${wifiPassword.value};;`; break;
+            case 'calendar': qrCodeData = formatCalendarEvent(); break;
+            case 'geo':
+              const lat = geoLatitude.value;
+              const lng = geoLongitude.value;
+              if (lat && lng) qrCodeData = `geo:${lat},${lng}`;
+              break;
+          }
+
+          if (!qrCodeData.trim()) {
+            reject(new Error('No QR data'));
+            return;
+          }
+
+          const tempImg = document.createElement('img');
+          tempImg.style.display = 'none';
+          document.body.appendChild(tempImg);
+
+          const replacedData = replaceMultiByteChars(qrCodeData);
+          const iconUrl = iconUrlInput.value;
+          const logo = uploadedIconUrl || iconUrl;
+
+          const qrCodeOptions = {
+            content: replacedData,
+            width: targetSize,
+            image: tempImg,
+            download: false,
+            nodeQrCodeOptions: {
+              errorCorrectionLevel: errorLevelSelect.value,
+              color: {
+                dark: dotsColorInput.value,
+                light: bgColorInput.value,
+              },
+            },
+            dotsOptions: {
+              type: dotsTypeSelect.value,
+              color: dotsColorInput.value,
+            },
+            cornersOptions: {
+              type: cornersTypeSelect.value,
+              color: cornersColorInput.value,
+            },
+          };
+
+          if (logo) {
+            qrCodeOptions.logo = {
+              src: logo,
+              borderWidth: targetSize * 0.12,
+              borderRadius: targetSize * 0.08,
+              bgColor: bgColorInput.value,
+            };
+          }
+
+          try {
+            new QrCodeWithLogo(qrCodeOptions);
+
+            setTimeout(() => {
+              if (tempImg.src) {
+                fetch(tempImg.src)
+                  .then(res => res.blob())
+                  .then(blob => {
+                    document.body.removeChild(tempImg);
+                    resolve(blob);
+                  })
+                  .catch(err => {
+                    document.body.removeChild(tempImg);
+                    reject(err);
+                  });
+              } else {
+                document.body.removeChild(tempImg);
+                reject(new Error('Failed to generate high-res QR'));
+              }
+            }, 300);
+          } catch (error) {
+            document.body.removeChild(tempImg);
+            reject(error);
+          }
+        });
+      }
+
       async function copyQRCode() {
         const qrCodeImage = document.getElementById('qrcode');
         if (!qrCodeImage.src) {
@@ -117,38 +212,27 @@ END:VEVENT`;
           return;
         }
 
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = 'Generating...';
+        copyBtn.disabled = true;
+
         try {
-          const response = await fetch(qrCodeImage.src);
-          const blob = await response.blob();
+          const blob = await generateHighResQRBlob(1024);
           await navigator.clipboard.write([
             new ClipboardItem({ 'image/png': blob })
           ]);
 
-          const originalText = copyBtn.textContent;
           copyBtn.textContent = 'Copied!';
           copyBtn.style.backgroundColor = '#28a745';
+          copyBtn.disabled = false;
           setTimeout(() => {
             copyBtn.textContent = originalText;
             copyBtn.style.backgroundColor = '';
           }, 2000);
         } catch (err) {
-          try {
-            const canvas = document.createElement('canvas');
-            const img = qrCodeImage;
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            canvas.toBlob(async (blob) => {
-              await navigator.clipboard.write([
-                new ClipboardItem({ 'image/png': blob })
-              ]);
-              copyBtn.textContent = 'Copied!';
-              setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
-            });
-          } catch (fallbackErr) {
-            alert('Copy failed. Your browser may not support clipboard image copy.');
-          }
+          copyBtn.textContent = originalText;
+          copyBtn.disabled = false;
+          alert('Copy failed. Your browser may not support clipboard image copy.');
         }
       }
 
@@ -164,10 +248,16 @@ END:VEVENT`;
           return;
         }
 
+        const originalText = shareBtn.textContent;
+        shareBtn.textContent = 'Generating...';
+        shareBtn.disabled = true;
+
         try {
-          const response = await fetch(qrCodeImage.src);
-          const blob = await response.blob();
+          const blob = await generateHighResQRBlob(1024);
           const file = new File([blob], 'qrcode.png', { type: 'image/png' });
+
+          shareBtn.textContent = originalText;
+          shareBtn.disabled = false;
 
           await navigator.share({
             title: 'QR Code',
@@ -175,6 +265,8 @@ END:VEVENT`;
             files: [file]
           });
         } catch (err) {
+          shareBtn.textContent = originalText;
+          shareBtn.disabled = false;
           if (err.name !== 'AbortError') {
             try {
               await navigator.share({
