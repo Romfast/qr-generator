@@ -212,8 +212,6 @@ END:VEVENT`;
           return;
         }
 
-        const originalText = copyBtn.textContent;
-        copyBtn.textContent = 'Generating...';
         copyBtn.disabled = true;
 
         try {
@@ -221,16 +219,8 @@ END:VEVENT`;
           await navigator.clipboard.write([
             new ClipboardItem({ 'image/png': blob })
           ]);
-
-          copyBtn.textContent = 'Copied!';
-          copyBtn.style.backgroundColor = '#28a745';
           copyBtn.disabled = false;
-          setTimeout(() => {
-            copyBtn.textContent = originalText;
-            copyBtn.style.backgroundColor = '';
-          }, 2000);
         } catch (err) {
-          copyBtn.textContent = originalText;
           copyBtn.disabled = false;
           alert('Copy failed. Your browser may not support clipboard image copy.');
         }
@@ -248,15 +238,12 @@ END:VEVENT`;
           return;
         }
 
-        const originalText = shareBtn.textContent;
-        shareBtn.textContent = 'Generating...';
         shareBtn.disabled = true;
 
         try {
           const blob = await generateHighResQRBlob(1024);
           const file = new File([blob], 'qrcode.png', { type: 'image/png' });
 
-          shareBtn.textContent = originalText;
           shareBtn.disabled = false;
 
           await navigator.share({
@@ -265,7 +252,6 @@ END:VEVENT`;
             files: [file]
           });
         } catch (err) {
-          shareBtn.textContent = originalText;
           shareBtn.disabled = false;
           if (err.name !== 'AbortError') {
             try {
