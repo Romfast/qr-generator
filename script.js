@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const MAX_HISTORY_ITEMS = 10;
       let saveTimeout = null;
       let lastSavedData = null;
+      let isRestoringFromHistory = false;
 
       const historyBtn = document.getElementById('historyBtn');
       const historyModal = document.getElementById('historyModal');
@@ -276,6 +277,9 @@ document.addEventListener('DOMContentLoaded', function() {
       function restoreFromHistory(historyItem) {
         const data = historyItem.data;
 
+        // Prevent saving duplicate when restoring
+        isRestoringFromHistory = true;
+
         // Set data type first
         dataTypeSelect.value = data.dataType;
         // Trigger the change to show correct fields
@@ -329,6 +333,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Regenerate QR code
         generateQRCode();
 
+        // Reset flag after a short delay to allow QR generation to complete
+        setTimeout(() => {
+          isRestoringFromHistory = false;
+        }, 100);
+
         // Close modal
         closeHistoryModal();
       }
@@ -376,6 +385,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       function debouncedSave() {
+        // Don't save when restoring from history
+        if (isRestoringFromHistory) return;
+
         if (saveTimeout) {
           clearTimeout(saveTimeout);
         }
